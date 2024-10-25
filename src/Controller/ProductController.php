@@ -7,9 +7,12 @@ use App\Form\ProductType;
 use App\Repository\ProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/product')]
 final class ProductController extends AbstractController
@@ -23,13 +26,33 @@ final class ProductController extends AbstractController
     }
 
     #[Route('/new', name: 'app_product_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, EntityManagerInterface $entityManager,SluggerInterface $slugger): Response
     {
         $product = new Product();
         $form = $this->createForm(ProductType::class, $product);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            /** @var UploadedFile $file */
+            $file=$form->get('image')->getData();
+            if($file){
+                // checking the existance of the file
+                $originalFilename = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $validName=$slugger->slug($originalFilename); // removing printable caracters
+                $fileName=$validName.'-'.uniqid().'.'.$file->guessExtension(); // new file name
+                try {
+                    $file->move($this->getParameter('images_directory'), $fileName); //saving the file
+
+                }catch(FileException $e) {
+                    //...
+                }
+                $product->setImage($fileName);
+
+            }
+
+
+
+
             $entityManager->persist($product);
             $entityManager->flush();
 
