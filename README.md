@@ -9,7 +9,7 @@ This is a Symfony project created from scratch as a training project (TP) to exp
 - **Categories Management**: Organize products into different categories.
 - **Commit History**: Each commit corresponds to a new feature or improvement, so you can follow the development process step-by-step.
 
-**!CAUTION**
+**CAUTION**
 whatchout the PHP Version (>=8.1.*)
   
 ## Installation
